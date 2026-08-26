@@ -1,0 +1,5 @@
+node_modules
+public/output.css
+.firebase
+dist
+.system_generated
