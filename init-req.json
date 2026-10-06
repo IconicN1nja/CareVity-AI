@@ -1,0 +1,11 @@
+{
+  "projectName": "carevityai",
+  "envName": "dev",
+  "defaultEditor": "code",
+  "appType": "javascript",
+  "javascriptFramework": "react-native",
+  "sourceDirPath": "src",
+  "distDirPath": "/",
+  "buildCommand": "npm run-script build",
+  "startCommand": "npm run-script start"
+}
