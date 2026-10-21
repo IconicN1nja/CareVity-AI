@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { signIn } from 'aws-amplify/auth';
+import { apiGet } from '../../lib/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
@@ -31,7 +32,12 @@ export default function LoginScreen() {
       }
       
       if (isSignedIn) {
-        router.replace('/(root)/(drawer)/dashboard');
+        try {
+          const result = await apiGet<{ user: { onboarded?: boolean } }>('/api/v1/users/me');
+          router.replace(result.user.onboarded ? '/(root)/(drawer)/dashboard' : '/(root)/assessment');
+        } catch {
+          router.replace('/(root)/assessment');
+        }
       }
     } catch (error: any) {
       toast.show('Login Failed', error.message || 'An error occurred during login', 'error');
