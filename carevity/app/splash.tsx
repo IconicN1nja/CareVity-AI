@@ -33,7 +33,9 @@ export default function SplashScreen() {
           router.replace('/(root)/assessment');
         }
       } catch {
-        if (!cancelled) router.replace('/entry');
+        if (cancelled) return;
+        const locallyOnboarded = await AsyncStorage.getItem('userOnboarded');
+        router.replace(locallyOnboarded === 'true' ? '/(root)/(drawer)/dashboard' : '/(root)/assessment');
       }
     };
 

@@ -11,8 +11,12 @@ const ok = (data: unknown) => response(200, { success: true, data });
 const fail = (status: number, code: string, message: string) => response(status, { success: false, error: { code, message } });
 
 async function identity(event: APIGatewayProxyEvent) {
-  const claims = event.requestContext.authorizer as { claims?: Record<string, string> } | undefined;
-  const values = claims?.claims;
+  const authorizer = event.requestContext.authorizer as Record<string, unknown> | undefined;
+  const nestedClaims = authorizer?.claims;
+  const values =
+    nestedClaims && typeof nestedClaims === 'object'
+      ? (nestedClaims as Record<string, string>)
+      : (authorizer as Record<string, string> | undefined);
   if (!values?.sub) throw new Error('UNAUTHORIZED');
   return { id: values.sub, email: values.email || `${values.sub}@carevity.ai`, name: values.username || values['cognito:username'] || 'User' };
 }
