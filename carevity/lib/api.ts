@@ -7,6 +7,11 @@ const configuredUrl =
   'http://localhost:4000';
 
 export const API_BASE_URL = configuredUrl.replace(/\/(askAI|api\/v1)\/?$/, '');
+export const AI_API_URL =
+  process.env.EXPO_PUBLIC_AI_API_URL ||
+  process.env.EXPO_PUBLIC_AWS_API_URL ||
+  process.env.AWS_API_URL ||
+  `${API_BASE_URL}/askAI`;
 
 export interface ApiEnvelope<T> {
   success: boolean;

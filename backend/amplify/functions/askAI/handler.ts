@@ -18,6 +18,12 @@ interface UserContext {
 }
 
 interface AskAIRequestBody {
+  action?: string;
+  name?: string;
+  age?: number;
+  heightCm?: number;
+  weightKg?: number;
+  locality?: string;
   userInput?: string;
   userMessage?: string;
   userContext?: UserContext;
@@ -28,6 +34,77 @@ interface AskAIRequestBody {
     userContext?: UserContext;
     context?: UserContext;
   };
+}
+
+function onboardingResult(body: AskAIRequestBody): APIGatewayProxyResult {
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  const locality =
+    typeof body.locality === "string" ? body.locality.trim() : "";
+  const age = body.age;
+  const heightCm = body.heightCm;
+  const weightKg = body.weightKg;
+
+  if (
+    !name ||
+    !locality ||
+    typeof age !== "number" ||
+    !Number.isFinite(age) ||
+    typeof heightCm !== "number" ||
+    !Number.isFinite(heightCm) ||
+    typeof weightKg !== "number" ||
+    !Number.isFinite(weightKg)
+  ) {
+    return jsonResult(400, {
+      success: false,
+      error: {
+        code: "BAD_REQUEST",
+        message: "All biological assessment fields are required",
+      },
+    });
+  }
+
+  if (
+    age < 13 ||
+    age > 120 ||
+    heightCm < 100 ||
+    heightCm > 250 ||
+    weightKg < 20 ||
+    weightKg > 300
+  ) {
+    return jsonResult(400, {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Age, height, or weight is outside the supported range",
+      },
+    });
+  }
+
+  const bmi = Number((weightKg / Math.pow(heightCm / 100, 2)).toFixed(1));
+  let bmiLabel = "Normal";
+  if (bmi < 18.5) {
+    bmiLabel = "Underweight";
+  } else if (bmi >= 25 && bmi < 30) {
+    bmiLabel = "Overweight";
+  } else if (bmi >= 30) {
+    bmiLabel = "Obese";
+  }
+
+  return jsonResult(200, {
+    success: true,
+    data: {
+      user: {
+        name,
+        age,
+        heightCm,
+        weightKg,
+        locality,
+        bmi,
+        bmiLabel,
+        onboarded: true,
+      },
+    },
+  });
 }
 
 function getUserContext(body: AskAIRequestBody): UserContext {
@@ -84,6 +161,10 @@ export async function handler(
         message: "Request body must be valid JSON",
       },
     });
+  }
+
+  if (body.action === "onboarding") {
+    return onboardingResult(body);
   }
 
   const userMessage = getInput(body);

@@ -5,7 +5,8 @@ import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiPost } from '../../lib/api';
+import { AI_API_URL } from '../../lib/api';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 export default function AssessmentScreen() {
   const router = useRouter();
@@ -42,16 +43,30 @@ export default function AssessmentScreen() {
     }
 
     try {
-      const result = await apiPost<{ user: { bmi: number; bmiLabel: string } }>(
-        '/api/v1/users/me/onboarding',
-        {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.accessToken?.toString();
+      const response = await fetch(AI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          action: 'onboarding',
           name: name.trim(),
           age: ageValue,
           heightCm: heightValue,
           weightKg: weightValue,
           locality: locality.trim(),
-        }
-      );
+        }),
+      });
+      const result = (await response.json()) as {
+        user?: { bmi: number; bmiLabel: string };
+        error?: { message?: string };
+      };
+      if (!response.ok || !result.user) {
+        throw new Error(result.error?.message || `Backend request failed (${response.status})`);
+      }
       const bmiVal = String(result.user.bmi);
       const bmiLabel = result.user.bmiLabel;
       await AsyncStorage.setItem('userName', name);

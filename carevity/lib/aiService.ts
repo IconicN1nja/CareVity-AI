@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { API_BASE_URL } from './api';
+import { AI_API_URL } from './api';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 // IMPORTANT: Once you deploy to Firebase, replace this URL with your actual Cloud Function URL
 // e.g., "https://us-central1-YOUR-PROJECT-ID.cloudfunctions.net/askAI"
 // If using Firebase Emulators locally, it looks like: "http://localhost:5001/YOUR-PROJECT-ID/us-central1/askAI"
-const CLOUD_FUNCTION_URL = `${API_BASE_URL}/askAI`;
+const CLOUD_FUNCTION_URL = AI_API_URL;
 
 export const generateAIResponse = async (
   userInput: string, 

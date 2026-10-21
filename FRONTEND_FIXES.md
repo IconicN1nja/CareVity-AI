@@ -14,10 +14,10 @@ The following frontend changes have already been completed and should be preserv
 - Removed direct client-side point awarding from the voice coach flow.
 - Updated `VoiceContext` to refresh server scores after an AI request.
 - Added `try/finally` cleanup so the voice UI does not remain stuck in the listening state.
-- Updated assessment to call:
+- Updated assessment to use the preserved legacy onboarding-compatible AI endpoint:
 
   ```text
-  POST /api/v1/users/me/onboarding
+  POST /askAI
   ```
 
 - Assessment now sends `name`, `age`, `heightCm`, `weightKg`, and `locality`.
@@ -104,24 +104,30 @@ EXPO_PUBLIC_API_URL=https://<BACKEND_DOMAIN>
 
 Do not include `/askAI` or `/api/v1` in `EXPO_PUBLIC_API_URL`.
 
-### Current deployed AWS URL
+### Current deployed AWS URLs
 
-The repository contains this deployed Amplify API Gateway URL:
+The full authenticated backend is deployed at:
 
 ```text
-https://cvnco5g0y3.execute-api.eu-north-1.amazonaws.com/prod
+https://351bb511l9.execute-api.eu-north-1.amazonaws.com/prod
 ```
 
-Use this exact frontend configuration for the currently deployed AI endpoint:
+Use this as the frontend API base URL:
 
 ```env
-EXPO_PUBLIC_API_URL=https://cvnco5g0y3.execute-api.eu-north-1.amazonaws.com/prod
+EXPO_PUBLIC_API_URL=https://351bb511l9.execute-api.eu-north-1.amazonaws.com/prod
 ```
 
-The deployed AI endpoint is:
+The preserved legacy AI Lambda remains at:
 
 ```text
 POST https://cvnco5g0y3.execute-api.eu-north-1.amazonaws.com/prod/askAI
+```
+
+Configure it separately because the full API and legacy AI Lambda are separate API Gateway deployments:
+
+```env
+EXPO_PUBLIC_AI_API_URL=https://cvnco5g0y3.execute-api.eu-north-1.amazonaws.com/prod/askAI
 ```
 
 The deployed Cognito configuration is:
@@ -132,7 +138,7 @@ EXPO_PUBLIC_COGNITO_USER_POOL_ID=eu-north-1_CcohNUoDj
 EXPO_PUBLIC_COGNITO_APP_CLIENT_ID=6vrqmvd8kcmpquui2m6hitq2n0
 ```
 
-**Important MVP limitation:** this deployed API Gateway currently exposes the Amplify `askAI` Lambda route only. The full Express MVP routes (`/api/v1/users/me`, tasks, challenges, points, squads, and leaderboards) are implemented in `backend/src/server.ts`, but are not confirmed to be deployed at this public URL. To use the complete backend-integrated MVP, deploy the Express backend and replace `EXPO_PUBLIC_API_URL` with that deployment's base URL. Until then, the exact public URL above can be used for the deployed AI coach only.
+The full API is protected by the existing Cognito user pool. Requests without a valid access token return `401 Unauthorized`. The legacy AI endpoint remains available for the current AI request and onboarding compatibility flow.
 
 ### Required endpoint URLs
 
@@ -180,6 +186,7 @@ Replace `:id` with the actual challenge or squad ID.
   ```
 
 - `carevity/lib/api.ts` already attaches this header through `fetchAuthSession()`.
+- `carevity/lib/aiService.ts` and the assessment flow use `EXPO_PUBLIC_AI_API_URL` for the preserved legacy AI Lambda.
 - Do not send the Cognito client secret or Sarvam API key to the frontend.
 - The AI endpoint also requires authentication in the deployed backend.
 
