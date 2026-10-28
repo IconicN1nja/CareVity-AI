@@ -113,15 +113,29 @@ async function runTests() {
   await test("Authentication rejects missing Authorization header", async () => {
     const res = await makeRequest("GET", "/api/v1/users/me");
     assert(res.status === 401, `Expected 401, got ${res.status}`);
-    assert(res.data.error.code === "UNAUTHORIZED", "Expected UNAUTHORIZED code");
+    assert(
+      res.data.error.code === "UNAUTHORIZED",
+      "Expected UNAUTHORIZED code"
+    );
   });
 
   await test("Authentication succeeds with Bearer token & creates profile", async () => {
-    const res = await makeRequest("GET", "/api/v1/users/me", undefined, testUserToken);
+    const res = await makeRequest(
+      "GET",
+      "/api/v1/users/me",
+      undefined,
+      testUserToken
+    );
     assert(res.status === 200, `Expected 200, got ${res.status}`);
     assert(res.data.success === true, "Expected success: true");
-    assert(res.data.data.user.userId === testUserToken, "Expected matching userId");
-    assert(res.data.data.user.onboarded === false, "User should start not onboarded");
+    assert(
+      res.data.data.user.userId === testUserToken,
+      "Expected matching userId"
+    );
+    assert(
+      res.data.data.user.onboarded === false,
+      "User should start not onboarded"
+    );
   });
 
   // 3. User Onboarding & BMI Baseline
@@ -166,17 +180,31 @@ async function runTests() {
       testUserToken
     );
     assert(res.status === 200, `Expected 200, got ${res.status}`);
-    assert(res.data.data.bmi === 22.2, `Expected BMI 22.2, got ${res.data.data.bmi}`);
-    assert(res.data.data.bmiLabel === BMILabel.NORMAL, "Expected Normal BMI label");
+    assert(
+      res.data.data.bmi === 22.2,
+      `Expected BMI 22.2, got ${res.data.data.bmi}`
+    );
+    assert(
+      res.data.data.bmiLabel === BMILabel.NORMAL,
+      "Expected Normal BMI label"
+    );
     assert(res.data.data.user.onboarded === true, "User should be onboarded");
   });
 
   // 4. Core 3 Daily Tasks
   await test("GET /api/v1/tasks/today initializes the 3 Core Tasks", async () => {
-    const res = await makeRequest("GET", "/api/v1/tasks/today", undefined, testUserToken);
+    const res = await makeRequest(
+      "GET",
+      "/api/v1/tasks/today",
+      undefined,
+      testUserToken
+    );
     assert(res.status === 200, `Expected 200, got ${res.status}`);
     const tasks = res.data.data.tasks;
-    assert(Array.isArray(tasks) && tasks.length === 3, "Expected exactly 3 tasks");
+    assert(
+      Array.isArray(tasks) && tasks.length === 3,
+      "Expected exactly 3 tasks"
+    );
     const taskIds = tasks.map((t: any) => t.taskId);
     assert(taskIds.includes("STEP_QUEST"), "Contains STEP_QUEST");
     assert(taskIds.includes("SLEEP_CURFEW"), "Contains SLEEP_CURFEW");
@@ -192,7 +220,10 @@ async function runTests() {
       testUserToken
     );
     assert(partial.data.data.task.progress === 2500, "Expected progress 2500");
-    assert(partial.data.data.task.status === "PENDING", "Expected status PENDING");
+    assert(
+      partial.data.data.task.status === "PENDING",
+      "Expected status PENDING"
+    );
     assert(!partial.data.data.isNewlyCompleted, "Not completed yet");
 
     // Reaching goal
@@ -202,14 +233,31 @@ async function runTests() {
       { steps: STEP_GOAL },
       testUserToken
     );
-    assert(completed.data.data.task.status === "COMPLETED", "Expected status COMPLETED");
-    assert(completed.data.data.task.pointsAwarded === CORE_TASK_POINTS, "Expected +10 points");
-    assert(completed.data.data.isNewlyCompleted === true, "Expected isNewlyCompleted true");
+    assert(
+      completed.data.data.task.status === "COMPLETED",
+      "Expected status COMPLETED"
+    );
+    assert(
+      completed.data.data.task.pointsAwarded === CORE_TASK_POINTS,
+      "Expected +10 points"
+    );
+    assert(
+      completed.data.data.isNewlyCompleted === true,
+      "Expected isNewlyCompleted true"
+    );
     assert(!!completed.data.data.benefit, "Expected benefit info returned");
 
     // Verify user's lifetime points updated
-    const pointsRes = await makeRequest("GET", "/api/v1/points/summary", undefined, testUserToken);
-    assert(pointsRes.data.data.lifetimePoints === 10, `Expected 10 lifetime points, got ${pointsRes.data.data.lifetimePoints}`);
+    const pointsRes = await makeRequest(
+      "GET",
+      "/api/v1/points/summary",
+      undefined,
+      testUserToken
+    );
+    assert(
+      pointsRes.data.data.lifetimePoints === 10,
+      `Expected 10 lifetime points, got ${pointsRes.data.data.lifetimePoints}`
+    );
   });
 
   await test("POST /api/v1/tasks/step-quest/progress is idempotent (no duplicate points)", async () => {
@@ -220,8 +268,16 @@ async function runTests() {
       { steps: STEP_GOAL + 1000 },
       testUserToken
     );
-    const pointsRes = await makeRequest("GET", "/api/v1/points/summary", undefined, testUserToken);
-    assert(pointsRes.data.data.lifetimePoints === 10, `Points should remain 10, got ${pointsRes.data.data.lifetimePoints}`);
+    const pointsRes = await makeRequest(
+      "GET",
+      "/api/v1/points/summary",
+      undefined,
+      testUserToken
+    );
+    assert(
+      pointsRes.data.data.lifetimePoints === 10,
+      `Points should remain 10, got ${pointsRes.data.data.lifetimePoints}`
+    );
   });
 
   await test("POST /api/v1/tasks/hydration logs incremental intake & completes at 4000ml", async () => {
@@ -232,18 +288,48 @@ async function runTests() {
       { amountMl: -500 },
       testUserToken
     );
-    assert(negRes.data.data.task.progress === 0, "Progress should not become negative");
+    assert(
+      negRes.data.data.task.progress === 0,
+      "Progress should not become negative"
+    );
 
     // Add 2000 ml
-    await makeRequest("POST", "/api/v1/tasks/hydration", { amountMl: 2000 }, testUserToken);
+    await makeRequest(
+      "POST",
+      "/api/v1/tasks/hydration",
+      { amountMl: 2000 },
+      testUserToken
+    );
     // Add another 2000 ml to reach 4000 ml
-    const doneRes = await makeRequest("POST", "/api/v1/tasks/hydration", { amountMl: 2000 }, testUserToken);
-    assert(doneRes.data.data.task.status === "COMPLETED", "Expected Hydration COMPLETED");
-    assert(doneRes.data.data.task.pointsAwarded === CORE_TASK_POINTS, "Expected +10 points");
-    assert(doneRes.data.data.isNewlyCompleted === true, "Expected isNewlyCompleted true");
+    const doneRes = await makeRequest(
+      "POST",
+      "/api/v1/tasks/hydration",
+      { amountMl: 2000 },
+      testUserToken
+    );
+    assert(
+      doneRes.data.data.task.status === "COMPLETED",
+      "Expected Hydration COMPLETED"
+    );
+    assert(
+      doneRes.data.data.task.pointsAwarded === CORE_TASK_POINTS,
+      "Expected +10 points"
+    );
+    assert(
+      doneRes.data.data.isNewlyCompleted === true,
+      "Expected isNewlyCompleted true"
+    );
 
-    const pointsRes = await makeRequest("GET", "/api/v1/points/summary", undefined, testUserToken);
-    assert(pointsRes.data.data.lifetimePoints === 20, `Expected 20 lifetime points, got ${pointsRes.data.data.lifetimePoints}`);
+    const pointsRes = await makeRequest(
+      "GET",
+      "/api/v1/points/summary",
+      undefined,
+      testUserToken
+    );
+    assert(
+      pointsRes.data.data.lifetimePoints === 20,
+      `Expected 20 lifetime points, got ${pointsRes.data.data.lifetimePoints}`
+    );
   });
 
   await test("POST /api/v1/tasks/sleep-curfew/result handles successful curfew (+10 pts)", async () => {
@@ -254,10 +340,21 @@ async function runTests() {
       testUserToken
     );
     assert(curfewRes.data.data.status === "COMPLETED", "Expected COMPLETED");
-    assert(curfewRes.data.data.task.pointsAwarded === CORE_TASK_POINTS, "Expected +10 points");
+    assert(
+      curfewRes.data.data.task.pointsAwarded === CORE_TASK_POINTS,
+      "Expected +10 points"
+    );
 
-    const pointsRes = await makeRequest("GET", "/api/v1/points/summary", undefined, testUserToken);
-    assert(pointsRes.data.data.lifetimePoints === 30, `Expected 30 lifetime points, got ${pointsRes.data.data.lifetimePoints}`);
+    const pointsRes = await makeRequest(
+      "GET",
+      "/api/v1/points/summary",
+      undefined,
+      testUserToken
+    );
+    assert(
+      pointsRes.data.data.lifetimePoints === 30,
+      `Expected 30 lifetime points, got ${pointsRes.data.data.lifetimePoints}`
+    );
   });
 
   await test("POST /api/v1/tasks/sleep-curfew/result failure applies -10 penalty on fresh user", async () => {
@@ -271,19 +368,38 @@ async function runTests() {
       penaltyUser
     );
     assert(failRes.data.data.status === "FAILED", "Expected FAILED status");
-    assert(failRes.data.data.task.pointsAwarded === TASK_PENALTY_POINTS, "Expected -10 penalty");
+    assert(
+      failRes.data.data.task.pointsAwarded === TASK_PENALTY_POINTS,
+      "Expected -10 penalty"
+    );
 
-    const pointsRes = await makeRequest("GET", "/api/v1/points/summary", undefined, penaltyUser);
-    assert(pointsRes.data.data.lifetimePoints === 0, `Points floored at 0, got ${pointsRes.data.data.lifetimePoints}`);
+    const pointsRes = await makeRequest(
+      "GET",
+      "/api/v1/points/summary",
+      undefined,
+      penaltyUser
+    );
+    assert(
+      pointsRes.data.data.lifetimePoints === 0,
+      `Points floored at 0, got ${pointsRes.data.data.lifetimePoints}`
+    );
   });
 
   // 5. Rotating Daily Challenges
   let activeChallengeId = "";
   await test("GET /api/v1/challenges/today returns 3 deterministic challenges", async () => {
-    const res = await makeRequest("GET", "/api/v1/challenges/today", undefined, testUserToken);
+    const res = await makeRequest(
+      "GET",
+      "/api/v1/challenges/today",
+      undefined,
+      testUserToken
+    );
     assert(res.status === 200, `Expected 200, got ${res.status}`);
     const challenges = res.data.data.challenges;
-    assert(Array.isArray(challenges) && challenges.length === 3, "Expected 3 challenges");
+    assert(
+      Array.isArray(challenges) && challenges.length === 3,
+      "Expected 3 challenges"
+    );
     activeChallengeId = challenges[0].challengeId;
   });
 
@@ -295,12 +411,23 @@ async function runTests() {
       testUserToken
     );
     assert(res.status === 200, `Expected 200, got ${res.status}`);
-    assert(res.data.data.challenge.status === "COMPLETED", "Expected COMPLETED");
-    assert(res.data.data.challenge.pointsAwarded === CORE_TASK_POINTS, "Expected +10");
+    assert(
+      res.data.data.challenge.status === "COMPLETED",
+      "Expected COMPLETED"
+    );
+    assert(
+      res.data.data.challenge.pointsAwarded === CORE_TASK_POINTS,
+      "Expected +10"
+    );
   });
 
   await test("POST /api/v1/challenges/:id/miss marks missed & applies penalty", async () => {
-    const listRes = await makeRequest("GET", "/api/v1/challenges/today", undefined, testUserToken);
+    const listRes = await makeRequest(
+      "GET",
+      "/api/v1/challenges/today",
+      undefined,
+      testUserToken
+    );
     const secondChallengeId = listRes.data.data.challenges[1].challengeId;
 
     const res = await makeRequest(
@@ -311,7 +438,10 @@ async function runTests() {
     );
     assert(res.status === 200, `Expected 200, got ${res.status}`);
     assert(res.data.data.challenge.status === "MISSED", "Expected MISSED");
-    assert(res.data.data.challenge.pointsAwarded === TASK_PENALTY_POINTS, "Expected -10");
+    assert(
+      res.data.data.challenge.pointsAwarded === TASK_PENALTY_POINTS,
+      "Expected -10"
+    );
   });
 
   await test("POST /api/v1/challenges/:id/complete returns 404 for unknown challenge", async () => {
@@ -326,7 +456,12 @@ async function runTests() {
 
   // 6. Points Summary & Ledger History
   await test("GET /api/v1/points/history lists recorded events", async () => {
-    const res = await makeRequest("GET", "/api/v1/points/history?limit=10", undefined, testUserToken);
+    const res = await makeRequest(
+      "GET",
+      "/api/v1/points/history?limit=10",
+      undefined,
+      testUserToken
+    );
     assert(res.status === 200, `Expected 200, got ${res.status}`);
     assert(Array.isArray(res.data.data.history), "Expected array of history");
     assert(res.data.data.history.length > 0, "Expected non-empty history");
@@ -334,12 +469,26 @@ async function runTests() {
 
   // 7. Monthly Digital Twin
   await test("GET /api/v1/digital-twin/monthly calculates progress percentage", async () => {
-    const res = await makeRequest("GET", "/api/v1/digital-twin/monthly", undefined, testUserToken);
+    const res = await makeRequest(
+      "GET",
+      "/api/v1/digital-twin/monthly",
+      undefined,
+      testUserToken
+    );
     assert(res.status === 200, `Expected 200, got ${res.status}`);
     const data = res.data.data;
-    assert(typeof data.progressPercentage === "number", "Expected numeric percentage");
-    assert(data.progressPercentage >= 0 && data.progressPercentage <= 100, "Percentage in 0-100");
-    assert(typeof data.latestHealthBenefit === "string", "Expected benefit description string");
+    assert(
+      typeof data.progressPercentage === "number",
+      "Expected numeric percentage"
+    );
+    assert(
+      data.progressPercentage >= 0 && data.progressPercentage <= 100,
+      "Percentage in 0-100"
+    );
+    assert(
+      typeof data.latestHealthBenefit === "string",
+      "Expected benefit description string"
+    );
   });
 
   // 8. Voice AI Health Coach
@@ -356,7 +505,10 @@ async function runTests() {
         res.data.data.reply.includes("physician"),
       "Must trigger medical disclaimer"
     );
-    assert(!!res.data.data.safetyDisclaimer, "Expected safetyDisclaimer property");
+    assert(
+      !!res.data.data.safetyDisclaimer,
+      "Expected safetyDisclaimer property"
+    );
   });
 
   await test("POST /api/v1/ai/coach enforces Medication Boundary", async () => {
@@ -389,23 +541,29 @@ async function runTests() {
         res.data.data.reply.toLowerCase().includes("glucose"),
       "Expected nutrition habit feedback"
     );
-    assert(res.data.data.pointTrigger === -10, "Expected -10 pointTrigger for samosas");
+    assert(
+      res.data.data.pointTrigger === -10,
+      "Expected -10 pointTrigger for samosas"
+    );
   });
 
   await test("POST /askAI succeeds without Authorization header using userContext", async () => {
-    const res = await makeRequest(
-      "POST",
-      "/askAI",
-      {
-        data: {
-          userInput: "I drank 4 liters of water today",
-          userContext: { name: "Rohan", bmi: "22.5", bmiLabel: "Normal" },
-        },
-      }
-    );
+    const res = await makeRequest("POST", "/askAI", {
+      data: {
+        userInput: "I drank 4 liters of water today",
+        userContext: { name: "Rohan", bmi: "22.5", bmiLabel: "Normal" },
+      },
+    });
     assert(res.status === 200, `Expected 200, got ${res.status}`);
-    assert(res.data.data.text.toLowerCase().includes("water") || res.data.data.text.toLowerCase().includes("hydration"), "Expected water response");
-    assert(res.data.data.pointTrigger === 10, "Expected +10 pointTrigger for hydration");
+    assert(
+      res.data.data.text.toLowerCase().includes("water") ||
+        res.data.data.text.toLowerCase().includes("hydration"),
+      "Expected water response"
+    );
+    assert(
+      res.data.data.pointTrigger === 10,
+      "Expected +10 pointTrigger for hydration"
+    );
   });
 
   // 9. Social Competition Leaderboards (Squad Arena & Local Grid)
@@ -420,7 +578,11 @@ async function runTests() {
       testUserToken
     );
     assert(res.status === 201, `Expected 201, got ${res.status}`);
-    assert(typeof res.data.data.roomCode === "string" && res.data.data.roomCode.length === 6, "Expected 6-char roomCode");
+    assert(
+      typeof res.data.data.roomCode === "string" &&
+        res.data.data.roomCode.length === 6,
+      "Expected 6-char roomCode"
+    );
   });
 
   await test("POST /api/v1/squads creates squad with unique 6-character room code", async () => {
@@ -433,7 +595,10 @@ async function runTests() {
     assert(res.status === 201, `Expected 201, got ${res.status}`);
     const squad = res.data.data.squad;
     assert(squad.name === "Velocity Squad", "Expected squad name");
-    assert(typeof squad.roomCode === "string" && squad.roomCode.length === 6, "Expected 6-char roomCode");
+    assert(
+      typeof squad.roomCode === "string" && squad.roomCode.length === 6,
+      "Expected 6-char roomCode"
+    );
     assert(squad.members.length === 1, "Owner should be added as member");
     createdRoomCode = squad.roomCode;
     createdSquadId = squad.squadId;
@@ -448,7 +613,10 @@ async function runTests() {
       friendToken
     );
     assert(res.status === 200, `Expected 200, got ${res.status}`);
-    assert(res.data.data.member.roomCode === createdRoomCode, "Room codes should match");
+    assert(
+      res.data.data.member.roomCode === createdRoomCode,
+      "Room codes should match"
+    );
   });
 
   await test("GET /api/v1/squads/:id/leaderboard ranks members with podium", async () => {
@@ -461,13 +629,21 @@ async function runTests() {
     assert(res.status === 200, `Expected 200, got ${res.status}`);
     const data = res.data.data;
     assert(data.squadName === "Velocity Squad", "Expected squad name");
-    assert(Array.isArray(data.rankings) && data.rankings.length === 2, "Expected 2 members ranked");
+    assert(
+      Array.isArray(data.rankings) && data.rankings.length === 2,
+      "Expected 2 members ranked"
+    );
     assert(Array.isArray(data.podium), "Expected podium array");
     assert(data.rankings[0].rank === 1, "First rank is 1");
   });
 
   await test("GET /api/v1/leaderboard/local provides regional ranking with user rank", async () => {
-    const res = await makeRequest("GET", "/api/v1/leaderboard/local", undefined, testUserToken);
+    const res = await makeRequest(
+      "GET",
+      "/api/v1/leaderboard/local",
+      undefined,
+      testUserToken
+    );
     assert(res.status === 200, `Expected 200, got ${res.status}`);
     const data = res.data.data;
     assert(typeof data.userRank === "number", "Expected userRank");

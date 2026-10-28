@@ -23,7 +23,7 @@ export default function SplashScreen() {
           return;
         }
 
-        const result = await apiGet<{ user: { onboarded?: boolean } }>('/api/v1/users/me');
+        const result = await apiGet<{ authenticated: boolean; user: { onboarded?: boolean } }>('/api/v1/auth/session');
         if (cancelled) return;
 
         if (result.user.onboarded) {

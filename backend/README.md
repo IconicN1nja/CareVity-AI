@@ -2,6 +2,31 @@
 
 A unified, robust Express TypeScript backend implementing all 7 core MVP specifications for **CareVity AI**.
 
+## Modular PostgreSQL backend
+
+The production-oriented backend now lives under `src/app` and runs with Express, Prisma/PostgreSQL, Zod validation, Cognito JWT verification, Helmet, rate limiting, and centralized errors. The previous `src/server.ts` remains as `legacy:dev`/`legacy:start` until the PostgreSQL deployment is verified.
+
+### Local setup
+
+```bash
+cd backend
+cp .env.example .env
+docker compose up -d postgres
+# set DATABASE_URL and Cognito values in .env
+npm run db:migrate
+npm run dev
+```
+
+The modular server listens on `http://localhost:4000`. OpenAPI documentation is in `openapi.yaml`; the DynamoDB migration procedure is in `MIGRATION.md`.
+
+To use it from the Expo app during local development:
+
+```env
+EXPO_PUBLIC_API_URL=http://<your-lan-ip>:4000
+```
+
+Do not switch the deployed frontend to this URL until PostgreSQL is provisioned and the migration/smoke-test checklist is complete.
+
 ---
 
 ## 🚀 Features Implemented
@@ -94,6 +119,7 @@ npm test
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `GET` | `/api/v1/health` | Service health status check |
+| `GET` | `/api/v1/auth/session` or `/api/v1/auth/me` | Validate Cognito session and fetch current user |
 | `GET` | `/api/v1/users/me` | Fetch authenticated user profile |
 | `POST` | `/api/v1/users/me/onboarding` | Biological assessment onboarding (computes BMI) |
 | `GET` | `/api/v1/tasks/today` | Fetch the 3 Core Tasks for today |

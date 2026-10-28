@@ -33,7 +33,7 @@ export default function LoginScreen() {
       
       if (isSignedIn) {
         try {
-          const result = await apiGet<{ user: { onboarded?: boolean } }>('/api/v1/users/me');
+          const result = await apiGet<{ authenticated: boolean; user: { onboarded?: boolean } }>('/api/v1/auth/session');
           router.replace(result.user.onboarded ? '/(root)/(drawer)/dashboard' : '/(root)/assessment');
         } catch {
           router.replace('/(root)/assessment');
